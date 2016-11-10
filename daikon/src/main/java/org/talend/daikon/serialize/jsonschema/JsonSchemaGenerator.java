@@ -47,7 +47,7 @@ public class JsonSchemaGenerator {
             String name = properties.getName();
             if (ReferenceProperties.class.isAssignableFrom(properties.getClass())) {
                 ((ObjectNode) schema.get(JsonSchemaConstants.TAG_PROPERTIES)).put(name,
-                        ((ReferenceProperties)properties).componentType.getValue());
+                        ((ReferenceProperties) properties).componentType.getValue());
             } else {
                 ((ObjectNode) schema.get(JsonSchemaConstants.TAG_PROPERTIES)).set(name, processTProperties(properties));
             }

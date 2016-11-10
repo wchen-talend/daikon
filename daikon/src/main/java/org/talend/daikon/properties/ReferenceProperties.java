@@ -24,8 +24,8 @@ import org.talend.daikon.properties.property.Property;
  * A reference to another properties. This could be in one of the following states:
  * <li>Use this properties (no reference)</li>
  * <li>Reference a single instance of a given properties type in the enclosing scope, e.g. Job</li>
- * <li>Reference to a particular instance of a properties. In this case, the {@link #properties} will be
- * populated by the {@link org.talend.daikon.properties.presentation.Widget}.</li>
+ * <li>Reference to a particular instance of a properties. In this case, the {@link #properties} will be populated by
+ * the {@link org.talend.daikon.properties.presentation.Widget}.</li>
  *
  * IMPORTANT - when using {@code ComponentReferenceProperties} the property name in the enclosingProperties must be
  * {@code referencedComponent}.
@@ -45,8 +45,7 @@ public interface ReferenceProperties extends Properties {
     // Properties
     //
     public Property<ReferenceType> referenceType = newEnum("referenceType", ReferenceType.class);
-    
-    public Property<String> componentType = newProperty("componentType").setFlags(EnumSet.of(DESIGN_TIME_ONLY)); //$NON-NLS-1$
 
+    public Property<String> componentType = newProperty("componentType").setFlags(EnumSet.of(DESIGN_TIME_ONLY)); //$NON-NLS-1$
 
 }
