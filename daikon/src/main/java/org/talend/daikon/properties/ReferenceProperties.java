@@ -12,40 +12,52 @@
 // ============================================================================
 package org.talend.daikon.properties;
 
-import static org.talend.daikon.properties.property.Property.Flags.DESIGN_TIME_ONLY;
-import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
-import static org.talend.daikon.properties.property.PropertyFactory.newProperty;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
 
-import java.util.EnumSet;
+import java.lang.reflect.Field;
 
 import org.talend.daikon.properties.property.Property;
 
 /**
- * A reference to another properties. This could be in one of the following states:
- * <li>Use this properties (no reference)</li>
- * <li>Reference a single instance of a given properties type in the enclosing scope, e.g. Job</li>
- * <li>Reference to a particular instance of a properties. In this case, the {@link #properties} will be populated by
- * the {@link org.talend.daikon.properties.presentation.Widget}.</li>
- *
- * IMPORTANT - when using {@code ComponentReferenceProperties} the property name in the enclosingProperties must be
- * {@code referencedComponent}.
- *
+ * A reference to another properties.
+ * 
  * The {@link org.talend.daikon.properties.presentation.WidgetType#COMPONENT_REFERENCE} uses this class as its
  * properties and the Widget will populate these values.
  */
-public interface ReferenceProperties extends Properties {
 
-    public enum ReferenceType {
-        THIS_COMPONENT,
-        COMPONENT_TYPE,
-        COMPONENT_INSTANCE
+public class ReferenceProperties<T extends Properties> extends PropertiesImpl {
+
+    /**
+     * name of the definition that may be used to create the reference type.
+     * the Generic type T for this class must be created by the defition matching the referenceDefintionName.
+     */
+    public final Property<String> referenceDefintionName = newProperty("referenceDefintionName");
+
+    /**
+     * the reference instance
+     */
+    private transient T reference;
+
+    public ReferenceProperties(String name, String referenceDefintionName) {
+        super(name);
+        this.referenceDefintionName.setValue(referenceDefintionName);
     }
 
-    //
-    // Properties
-    //
-    public Property<ReferenceType> referenceType = newEnum("referenceType", ReferenceType.class);
+    public void setReference(Properties prop) {
+        reference = (T) prop;
+    }
 
-    public Property<String> componentType = newProperty("componentType").setFlags(EnumSet.of(DESIGN_TIME_ONLY)); //$NON-NLS-1$
+    public T getReference() {
+        return reference;
+    }
+
+    @Override
+    protected boolean acceptUninitializedField(Field f) {
+        if (super.acceptUninitializedField(f)) {
+            return true;
+        }
+        // we accept that return field is not intialized after setupProperties.
+        return "reference".equals(f.getName());
+    }
 
 }

@@ -1,9 +1,6 @@
 package org.talend.daikon.serialize.jsonschema;
 
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.getListInnerClassName;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.getSubProperties;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.getSubProperty;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.isListClass;
+import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.*;
 
 import java.util.Date;
 import java.util.List;
@@ -15,6 +12,7 @@ import org.talend.daikon.properties.property.EnumListProperty;
 import org.talend.daikon.properties.property.EnumProperty;
 import org.talend.daikon.properties.property.Property;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -45,13 +43,25 @@ public class JsonSchemaGenerator {
         List<Properties> propertiesList = getSubProperties(cProperties);
         for (Properties properties : propertiesList) {
             String name = properties.getName();
-            if (ReferenceProperties.class.isAssignableFrom(properties.getClass())) {
-                ((ObjectNode) schema.get(JsonSchemaConstants.TAG_PROPERTIES)).put(name,
-                        ((ReferenceProperties) properties).componentType.getValue());
+            // if this is a reference then just store it as a string and only store the definition
+            if (properties instanceof ReferenceProperties<?>) {
+                ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
+                ((ObjectNode) schema.get(JsonSchemaConstants.TAG_PROPERTIES)).set(name,
+                        processReferenceProperties(referenceProperties));
             } else {
                 ((ObjectNode) schema.get(JsonSchemaConstants.TAG_PROPERTIES)).set(name, processTProperties(properties));
             }
         }
+        return schema;
+    }
+
+    /**
+     * create a simple String definition with the {@link ReferenceProperties#referenceDefintionName} value
+     */
+    private JsonNode processReferenceProperties(ReferenceProperties<?> referenceProperties) {
+        ObjectNode schema = JsonNodeFactory.instance.objectNode();
+        schema.put(JsonSchemaConstants.TAG_TITLE, referenceProperties.getDisplayName());
+        schema.put(JsonSchemaConstants.TAG_TYPE, JsonSchemaConstants.TYPE_STRING);
         return schema;
     }
 

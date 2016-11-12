@@ -1,11 +1,6 @@
 package org.talend.daikon.serialize.jsonschema;
 
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.dateFormatter;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.findClass;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.getListInnerClassName;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.getSubProperties;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.getSubProperty;
-import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.isListClass;
+import static org.talend.daikon.serialize.jsonschema.JsonBaseTool.*;
 
 import java.util.Date;
 import java.util.List;
@@ -21,7 +16,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonDataGenerator {
 
-    protected <T extends Properties> ObjectNode genData(T properties) {
+    protected ObjectNode genData(Properties properties) {
         return processTPropertiesData(properties);
     }
 
@@ -34,8 +29,12 @@ public class JsonDataGenerator {
         }
         List<Properties> propertiesList = getSubProperties(cProperties);
         for (Properties properties : propertiesList) {
-            if (!ReferenceProperties.class.isAssignableFrom(properties.getClass())) {
-                String name = properties.getName();
+            String name = properties.getName();
+            // for ReferencePropertie we just create a String node in the root just like any Property
+            if (properties instanceof ReferenceProperties<?>) {
+                ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
+                rootNode.put(properties.getName(), referenceProperties.referenceDefintionName.getValue());
+            } else {
                 rootNode.set(name, processTPropertiesData(properties));
             }
         }

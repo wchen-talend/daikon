@@ -1,32 +1,41 @@
 package org.talend.daikon.serialize.jsonschema;
 
-import static org.talend.daikon.properties.property.PropertyFactory.newString;
+import static org.talend.daikon.properties.property.PropertyFactory.*;
+
+import java.text.ParseException;
 
 import org.talend.daikon.properties.PropertiesImpl;
 import org.talend.daikon.properties.ReferenceProperties;
-import org.talend.daikon.properties.ReferenceProperties.ReferenceType;
 import org.talend.daikon.properties.property.Property;
 
 public class ReferenceExampleProperties extends PropertiesImpl {
 
     public Property<String> parentProp = newString("parentProp", "initialparentValue");
 
-    public TestReferenceProperties reference = new TestReferenceProperties("reference");
+    public ReferenceProperties<TestAProperties> testAPropReference = new ReferenceProperties<>("testAPropReference",
+            TestAProperties.TEST_A_PROPERTIES_DEFINTION_NAME);
 
     public ReferenceExampleProperties(String name) {
         super(name);
-        reference.componentType.setValue("TestReference");
-        reference.referenceType.setValue(ReferenceType.COMPONENT_TYPE);
     }
 
-    public static class TestReferenceProperties extends PropertiesImpl implements ReferenceProperties {
+    public static class TestAProperties extends PropertiesImpl {
 
-        public Property<String> childProp = newString("childProp", "initialChildValue");
+        public static final String TEST_A_PROPERTIES_DEFINTION_NAME = "TestAPropertiesDefintionName";
 
-        public TestReferenceProperties(String name) {
+        public Property<String> aProp = newString("aProp", "initialaPropValue");
+
+        public TestAProperties(String name) {
             super(name);
         }
 
+    }
+
+    static public ReferenceExampleProperties createASetupReferenceExampleProperties() throws ParseException {
+        ReferenceExampleProperties properties = (ReferenceExampleProperties) new ReferenceExampleProperties("refexample").init();
+        TestAProperties theReferencedProperties = (TestAProperties) new TestAProperties(null).init();
+        properties.testAPropReference.setReference(theReferencedProperties);
+        return properties;
     }
 
 }

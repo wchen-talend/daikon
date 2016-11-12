@@ -2,13 +2,15 @@ package org.talend.daikon.serialize.jsonschema;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.properties.Properties;
+import org.talend.daikon.properties.PropertiesVisitor;
 import org.talend.daikon.properties.ReferenceProperties;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,6 +21,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * Util for round trip between ComponentProperties and JSONSchema/UISchema/JSONData
  */
 public class JsonSchemaUtil {
+
+    static final Logger LOG = LoggerFactory.getLogger(JsonSchemaUtil.class);
 
     public static final String TAG_JSON_SCHEMA = "jsonSchema";
 
@@ -82,21 +86,31 @@ public class JsonSchemaUtil {
     }
 
     /**
-     * resolve the referenced properties between a group of properties
+     * resolve the referenced properties between a group of properties.
+     * 
+     * @param propertiesMap a map with the definitions name and Properties instance related to those definitions
      */
-    public static void resolveReferenceProperties(Map<String, Properties> propertiesMap) {
+    public static void resolveReferenceProperties(final Map<String, Properties> propertiesMap) {
         for (Entry<String, Properties> entry : propertiesMap.entrySet()) {
-            Field[] allFields = entry.getValue().getClass().getFields();
-            for (Field field : allFields) {
-                if (ReferenceProperties.class.isAssignableFrom(field.getType())) {
-                    try {
-                        String referenceName = ((ReferenceProperties) field.get(entry.getValue())).componentType.getValue();
-                        field.set(entry.getValue(), propertiesMap.get(referenceName));
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
+            Properties theProperties = entry.getValue();
+            theProperties.accept(new PropertiesVisitor() {
+
+                @Override
+                public void visit(Properties properties, Properties parent) {
+                    if (properties instanceof ReferenceProperties<?>) {
+                        ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
+                        Properties reference = propertiesMap.get(referenceProperties.referenceDefintionName.getValue());
+                        if (reference != null) {
+                            referenceProperties.setReference(reference);
+                        } else {// no reference of the required type has been provided so do no set anything but log it
+                            LOG.debug("failed to find a reference object for ReferenceProperties[" + referenceProperties.getName()
+                                    + "] with defintion [" + referenceProperties.referenceDefintionName.getValue()
+                                    + "] and with parent type [" + (parent != null ? parent.getClass().getName() : "null") + "]");
+                        }
                     }
+
                 }
-            }
+            }, null);
         }
     }
 }
