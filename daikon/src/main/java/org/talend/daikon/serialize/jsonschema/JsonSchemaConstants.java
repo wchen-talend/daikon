@@ -107,4 +107,6 @@ public class JsonSchemaConstants {
     public static Map<String, String> getTypeMapping() {
         return TYPE_MAPPING;
     }
+
+    public static final String DEFINITION_NAME_JSON_METADATA = "@definitionName";
 }

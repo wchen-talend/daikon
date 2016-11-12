@@ -16,11 +16,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonDataGenerator {
 
-    protected ObjectNode genData(Properties properties) {
-        return processTPropertiesData(properties);
+    protected ObjectNode genData(Properties properties, String definitionName) {
+        ObjectNode propertiesJsonDataObject = processTPropertiesData(properties);
+        propertiesJsonDataObject.put(JsonSchemaConstants.DEFINITION_NAME_JSON_METADATA, definitionName);
+        return propertiesJsonDataObject;
     }
 
-    private ObjectNode processTPropertiesData(Properties cProperties) {
+    ObjectNode processTPropertiesData(Properties cProperties) {
         ObjectNode rootNode = JsonNodeFactory.instance.objectNode();
 
         List<Property> propertyList = getSubProperty(cProperties);
