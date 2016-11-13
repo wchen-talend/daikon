@@ -56,7 +56,7 @@ public class JsonSchemaGenerator {
     }
 
     /**
-     * create a simple String definition with the {@link ReferenceProperties#referenceDefintionName} value
+     * create a simple String definition with the {@link ReferenceProperties#referenceDefinitionName} value
      */
     private JsonNode processReferenceProperties(ReferenceProperties<?> referenceProperties) {
         ObjectNode schema = JsonNodeFactory.instance.objectNode();

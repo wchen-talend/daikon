@@ -35,7 +35,7 @@ public class JsonDataGenerator {
             // for ReferencePropertie we just create a String node in the root just like any Property
             if (properties instanceof ReferenceProperties<?>) {
                 ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
-                rootNode.put(properties.getName(), referenceProperties.referenceDefintionName.getValue());
+                rootNode.put(properties.getName(), referenceProperties.referenceDefinitionName.getValue());
             } else {
                 rootNode.set(name, processTPropertiesData(properties));
             }

@@ -151,12 +151,12 @@ public class JsonSchemaUtil {
                 public void visit(Properties properties, Properties parent) {
                     if (properties instanceof ReferenceProperties<?>) {
                         ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
-                        Properties reference = propertiesMap.get(referenceProperties.referenceDefintionName.getValue());
+                        Properties reference = propertiesMap.get(referenceProperties.referenceDefinitionName.getValue());
                         if (reference != null) {
                             referenceProperties.setReference(reference);
                         } else {// no reference of the required type has been provided so do no set anything but log it
                             LOG.debug("failed to find a reference object for ReferenceProperties[" + referenceProperties.getName()
-                                    + "] with defintion [" + referenceProperties.referenceDefintionName.getValue()
+                                    + "] with defintion [" + referenceProperties.referenceDefinitionName.getValue()
                                     + "] and with parent type [" + (parent != null ? parent.getClass().getName() : "null") + "]");
                         }
                     }

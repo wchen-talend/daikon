@@ -31,7 +31,7 @@ public class ReferenceProperties<T extends Properties> extends PropertiesImpl {
      * name of the definition that may be used to create the reference type.
      * the Generic type T for this class must be created by the defition matching the referenceDefintionName.
      */
-    public final Property<String> referenceDefintionName = newProperty("referenceDefintionName");
+    public final Property<String> referenceDefinitionName = newProperty("referenceDefinitionName");
 
     /**
      * the reference instance
@@ -40,7 +40,7 @@ public class ReferenceProperties<T extends Properties> extends PropertiesImpl {
 
     public ReferenceProperties(String name, String referenceDefintionName) {
         super(name);
-        this.referenceDefintionName.setValue(referenceDefintionName);
+        this.referenceDefinitionName.setValue(referenceDefintionName);
     }
 
     public void setReference(Properties prop) {
