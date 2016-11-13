@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 import org.talend.daikon.definition.Definition;
+import org.talend.daikon.properties.Properties;
 
 /**
  * The service should handle {@link Definition} and guarantees that only one instance is registered with a unique name (
@@ -39,5 +40,17 @@ public interface DefinitionRegistryService {
      * @exception ComponentException thrown if the definitionName is not registered in the service
      */
     InputStream getImage(String definitionName);
+
+    /**
+     * return the list of definition that can create an instance of properties. All the definition returned shall be able to
+     * return an exact instance of the class or one of it's derived class.An empty interable is returned if none found
+     */
+    Iterable<Definition> getDefinitionForPropertiesType(Class<? extends Properties> propertiesClass);
+
+    /**
+     * creates the Properties instance related to the Definition, the returned properties has also been initialised (
+     * {@link Properties#init()} called).
+     */
+    <P extends Properties> P createProperties(Definition<P> definition, String name);
 
 }

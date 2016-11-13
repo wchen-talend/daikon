@@ -15,7 +15,14 @@ package org.talend.daikon.properties;
 import static org.talend.daikon.properties.property.PropertyFactory.*;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.talend.daikon.definition.Definition;
+import org.talend.daikon.definition.service.DefinitionRegistryService;
 import org.talend.daikon.properties.property.Property;
 
 /**
@@ -27,6 +34,8 @@ import org.talend.daikon.properties.property.Property;
 
 public class ReferenceProperties<T extends Properties> extends PropertiesImpl {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ReferenceProperties.class);
+
     /**
      * name of the definition that may be used to create the reference type.
      * the Generic type T for this class must be created by the defition matching the referenceDefintionName.
@@ -37,6 +46,8 @@ public class ReferenceProperties<T extends Properties> extends PropertiesImpl {
      * the reference instance
      */
     private transient T reference;
+
+    private static Iterable<Definition> definitionForPropertyType;
 
     public ReferenceProperties(String name, String referenceDefintionName) {
         super(name);
@@ -58,6 +69,56 @@ public class ReferenceProperties<T extends Properties> extends PropertiesImpl {
         }
         // we accept that return field is not intialized after setupProperties.
         return "reference".equals(f.getName());
+    }
+
+    /**
+     * resolve the referenced properties between a group of properties.
+     * 
+     * @param properties list of all references to resolve
+     * @param definitionRegistry used to find the definitions compatible with current properties
+     */
+    public static void resolveReferenceProperties(final Iterable<? extends Properties> properties,
+            DefinitionRegistryService definitionRegistry) {
+        // construct the definitionName and Properties map
+        Map<String, Properties> def2PropsMap = new HashMap<>();
+
+        for (Properties prop : properties) {
+            // look for the definition associated with the properties
+            Iterable<Definition> allDefs = definitionRegistry.getDefinitionForPropertiesType(prop.getClass());
+            for (Definition def : allDefs) {
+                def2PropsMap.put(def.getName(), prop);
+            }
+        }
+        resolveReferenceProperties(def2PropsMap);
+    }
+
+    /**
+     * resolve the referenced properties between a group of properties.
+     * 
+     * @param propertiesMap a map with the definitions name and Properties instance related to those definitions
+     */
+    public static void resolveReferenceProperties(final Map<String, Properties> propertiesMap) {
+        for (Entry<String, Properties> entry : propertiesMap.entrySet()) {
+            Properties theProperties = entry.getValue();
+            theProperties.accept(new PropertiesVisitor() {
+
+                @Override
+                public void visit(Properties properties, Properties parent) {
+                    if (properties instanceof ReferenceProperties<?>) {
+                        ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
+                        Properties theReference = propertiesMap.get(referenceProperties.referenceDefinitionName.getValue());
+                        if (theReference != null) {
+                            referenceProperties.setReference(theReference);
+                        } else {// no reference of the required type has been provided so do no set anything but log it
+                            LOG.debug("failed to find a reference object for ReferenceProperties[" + referenceProperties.getName()
+                                    + "] with defintion [" + referenceProperties.referenceDefinitionName.getValue()
+                                    + "] and with parent type [" + (parent != null ? parent.getClass().getName() : "null") + "]");
+                        }
+                    }
+
+                }
+            }, null);
+        }
     }
 
 }

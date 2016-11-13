@@ -1,11 +1,7 @@
-package org.talend.daikon.serialize.jsonschema;
+package org.talend.daikon.properties;
 
 import static org.talend.daikon.properties.property.PropertyFactory.*;
 
-import java.text.ParseException;
-
-import org.talend.daikon.properties.PropertiesImpl;
-import org.talend.daikon.properties.ReferenceProperties;
 import org.talend.daikon.properties.property.Property;
 
 public class ReferenceExampleProperties extends PropertiesImpl {
@@ -25,17 +21,25 @@ public class ReferenceExampleProperties extends PropertiesImpl {
 
         public Property<String> aProp = newString("aProp", "initialaPropValue");
 
+        public ReferenceProperties<TestBProperties> testBPropReference = new ReferenceProperties<>("testBPropReference",
+                TestBProperties.TEST_B_PROPERTIES_DEFINTION_NAME);
+
         public TestAProperties(String name) {
             super(name);
         }
 
     }
 
-    static public ReferenceExampleProperties createASetupReferenceExampleProperties() throws ParseException {
-        ReferenceExampleProperties properties = (ReferenceExampleProperties) new ReferenceExampleProperties("refexample").init();
-        TestAProperties theReferencedProperties = (TestAProperties) new TestAProperties(null).init();
-        properties.testAPropReference.setReference(theReferencedProperties);
-        return properties;
+    public static class TestBProperties extends PropertiesImpl {
+
+        public static final String TEST_B_PROPERTIES_DEFINTION_NAME = "TestBPropertiesDefintionName";
+
+        public Property<String> bProp = newString("bProp", "initialaPropValue");
+
+        public TestBProperties(String name) {
+            super(name);
+        }
+
     }
 
 }

@@ -3,8 +3,6 @@ package org.talend.daikon.serialize.jsonschema;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +11,6 @@ import org.talend.daikon.definition.service.DefinitionRegistryService;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
 import org.talend.daikon.properties.Properties;
-import org.talend.daikon.properties.PropertiesVisitor;
-import org.talend.daikon.properties.ReferenceProperties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -76,6 +72,10 @@ public class JsonSchemaUtil {
         }
     }
 
+    /**
+     * returns a Properties instance if any found according to the json description and the registry.
+     * The returned properties has been initialized (call to {@link Properties#init()}.
+     */
     static Properties fromJsonNode(DefinitionRegistryService defRegistryService, JsonNode jsonNode) throws NoSuchMethodException,
             IOException, InstantiationException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
         JsonNode defNameNode = jsonNode.get(JsonSchemaConstants.DEFINITION_NAME_JSON_METADATA);
@@ -86,7 +86,7 @@ public class JsonSchemaUtil {
         if (definition == null) {// we are trying to use a definition that is not registered
             throw TalendRuntimeException.build(CommonErrorCodes.UNREGISTERED_DEFINITION).set(defNameNode.asText());
         } // else we got a definition so let's use it to create the instance.
-        return fromJson(jsonNode, definition.createProperties().init());
+        return fromJson(jsonNode, (defRegistryService.createProperties(definition, "")).init());
     }
 
     /**
@@ -137,32 +137,4 @@ public class JsonSchemaUtil {
         return objectNode.toString();
     }
 
-    /**
-     * resolve the referenced properties between a group of properties.
-     * 
-     * @param propertiesMap a map with the definitions name and Properties instance related to those definitions
-     */
-    public static void resolveReferenceProperties(final Map<String, Properties> propertiesMap) {
-        for (Entry<String, Properties> entry : propertiesMap.entrySet()) {
-            Properties theProperties = entry.getValue();
-            theProperties.accept(new PropertiesVisitor() {
-
-                @Override
-                public void visit(Properties properties, Properties parent) {
-                    if (properties instanceof ReferenceProperties<?>) {
-                        ReferenceProperties<?> referenceProperties = (ReferenceProperties<?>) properties;
-                        Properties reference = propertiesMap.get(referenceProperties.referenceDefinitionName.getValue());
-                        if (reference != null) {
-                            referenceProperties.setReference(reference);
-                        } else {// no reference of the required type has been provided so do no set anything but log it
-                            LOG.debug("failed to find a reference object for ReferenceProperties[" + referenceProperties.getName()
-                                    + "] with defintion [" + referenceProperties.referenceDefinitionName.getValue()
-                                    + "] and with parent type [" + (parent != null ? parent.getClass().getName() : "null") + "]");
-                        }
-                    }
-
-                }
-            }, null);
-        }
-    }
 }

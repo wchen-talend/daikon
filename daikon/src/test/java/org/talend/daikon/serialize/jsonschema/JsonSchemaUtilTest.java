@@ -9,16 +9,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Test;
 import org.talend.daikon.definition.Definition;
 import org.talend.daikon.definition.service.DefinitionRegistryService;
 import org.talend.daikon.exception.TalendRuntimeException;
 import org.talend.daikon.exception.error.CommonErrorCodes;
-import org.talend.daikon.properties.Properties;
-import org.talend.daikon.serialize.jsonschema.ReferenceExampleProperties.TestAProperties;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -106,8 +102,9 @@ public class JsonSchemaUtilTest {
     public DefinitionRegistryService getRegistryWithDef1() {
         DefinitionRegistryService defRegServ = mock(DefinitionRegistryService.class);
         Definition exampleDef = mock(Definition.class);
-        when(exampleDef.createProperties()).thenReturn(new FullExampleProperties(""));
+        when(exampleDef.getPropertiesClass()).thenReturn(FullExampleProperties.class);
         when(defRegServ.getDefinitionsMapByType(Definition.class)).thenReturn(Collections.singletonMap("def1", exampleDef));
+        when(defRegServ.createProperties(exampleDef, "")).thenReturn(new FullExampleProperties(""));
         return defRegServ;
     }
 
@@ -121,40 +118,6 @@ public class JsonSchemaUtilTest {
         JsonNode defNameNode = jsonData.get(JsonSchemaConstants.DEFINITION_NAME_JSON_METADATA);
         assertNotNull(defNameNode);
         assertEquals(defNameNode.asText(), "ZeDefinitionName");
-    }
-
-    @Test
-    public void testSerializeResolveReferenceProperties() throws ParseException, JsonProcessingException, IOException {
-        DefinitionRegistryService registryWithDef1 = getRegistryWithDef1();
-        // create a json string of a setup properties
-        ReferenceExampleProperties referenceProperties = ReferenceExampleProperties.createASetupReferenceExampleProperties();
-        referenceProperties.parentProp.setValue("foo");
-        referenceProperties.testAPropReference.getReference().aProp.setValue("bar");
-        String parentJson = JsonSchemaUtil.toJson(referenceProperties, "def1");
-        System.out.println(parentJson);
-        String childJson = JsonSchemaUtil.toJson(referenceProperties.testAPropReference.getReference(), "def1");
-
-        // re-create the Properties from the json data of the json string
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree(parentJson);
-        JsonNode jsonData = jsonNode.get(JsonSchemaUtil.TAG_JSON_DATA);
-        ReferenceExampleProperties deserRefExampleProp = JsonSchemaUtil.fromJson(jsonData.toString(),
-                (ReferenceExampleProperties) new ReferenceExampleProperties("refexample").init());
-
-        jsonNode = mapper.readTree(childJson);
-        jsonData = jsonNode.get(JsonSchemaUtil.TAG_JSON_DATA);
-        TestAProperties deserTestAProp = JsonSchemaUtil.fromJson(jsonData.toString(),
-                (TestAProperties) new TestAProperties("reference").init());
-
-        // merge everything to the parent
-        Map<String, Properties> definition2PropertiesMap = new HashMap<>();
-        definition2PropertiesMap.put("no_used", deserRefExampleProp);
-        definition2PropertiesMap.put(TestAProperties.TEST_A_PROPERTIES_DEFINTION_NAME, deserTestAProp);
-        JsonSchemaUtil.resolveReferenceProperties(definition2PropertiesMap);
-
-        // compare the parent with the initial object
-        assertEquals(referenceProperties, deserRefExampleProp);
-        assertEquals(deserRefExampleProp.testAPropReference.getReference(), deserTestAProp);
     }
 
     public static String readJson(String path) throws URISyntaxException, IOException {

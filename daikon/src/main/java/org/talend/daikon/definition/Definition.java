@@ -22,9 +22,10 @@ import org.talend.daikon.properties.Properties;
 public interface Definition<P extends Properties> extends NamedThing {
 
     /**
-     * @return An empty instance of the properties for an instance of this definition.
+     * @return the Properties class associated with this definition.
+     *         This class must have a constructore with a String paremeter to set it's name.
      */
-    P createProperties();
+    Class<P> getPropertiesClass();
 
     /**
      * A path relative to the current instance, ideally is should just be the name of the png image if
