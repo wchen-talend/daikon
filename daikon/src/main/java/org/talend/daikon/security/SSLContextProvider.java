@@ -55,9 +55,6 @@ public class SSLContextProvider {
             kmf.init(tks, storePass.toCharArray());
 
             return kmf.getKeyManagers();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             if (stream != null) {
                 stream.close();
