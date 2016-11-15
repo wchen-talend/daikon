@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -89,16 +90,13 @@ public class SSLContextProvider {
     }
 
     public synchronized static SSLContext buildContext(String algorithm, String keypath, String keypass, String keytype,
-            String trustpath, String trustpass, String trusttype) {
-        try {
-            KeyManager[] kms = buildKeyManagers(keypath, keypass, keytype);
-            TrustManager[] tms = buildTrustManagers(trustpath, trustpass, trusttype);
-            SSLContext context = SSLContext.getInstance(algorithm);
-            context.init(kms, tms, null);
-            return context;
-        } catch (Exception e) {
-            throw new SecurityException(e.getMessage(), e);
-        }
+            String trustpath, String trustpass, String trusttype) throws UnrecoverableKeyException, KeyStoreException,
+            NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException {
+        KeyManager[] kms = buildKeyManagers(keypath, keypass, keytype);
+        TrustManager[] tms = buildTrustManagers(trustpath, trustpass, trusttype);
+        SSLContext context = SSLContext.getInstance(algorithm);
+        context.init(kms, tms, null);
+        return context;
     }
 
 }
